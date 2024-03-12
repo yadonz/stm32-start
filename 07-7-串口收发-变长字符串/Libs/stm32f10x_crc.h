@@ -1,10 +1,11 @@
 /**
   ******************************************************************************
-  * @file    Project/STM32F10x_StdPeriph_Template/stm32f10x_it.h 
+  * @file    stm32f10x_crc.h
   * @author  MCD Application Team
   * @version V3.5.0
-  * @date    08-April-2011
-  * @brief   This file contains the headers of the interrupt handlers.
+  * @date    11-March-2011
+  * @brief   This file contains all the functions prototypes for the CRC firmware 
+  *          library.
   ******************************************************************************
   * @attention
   *
@@ -17,53 +18,77 @@
   *
   * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __STM32F10x_IT_H
-#define __STM32F10x_IT_H
+#ifndef __STM32F10x_CRC_H
+#define __STM32F10x_CRC_H
 
 #ifdef __cplusplus
  extern "C" {
-#endif 
+#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
 
-// 串口状态标志位
-typedef enum{
-	Serial_State_Standby = 0,
-	Serial_State_Working1 = 1,
-	Serial_State_Working2 = 2,
-	Serial_State_Finished = 3
-}Serial_State_TypeDef;
+/** @addtogroup STM32F10x_StdPeriph_Driver
+  * @{
+  */
 
-Serial_State_TypeDef Serial_State;	// 串口缓冲区状态标志位
-// 串口数据包接收缓冲区
-char Serial_Buffer[100];
-uint16_t i = 0;
+/** @addtogroup CRC
+  * @{
+  */
 
-/* Exported types ------------------------------------------------------------*/
-/* Exported constants --------------------------------------------------------*/
-/* Exported macro ------------------------------------------------------------*/
-/* Exported functions ------------------------------------------------------- */
+/** @defgroup CRC_Exported_Types
+  * @{
+  */
 
-void NMI_Handler(void);
-void HardFault_Handler(void);
-void MemManage_Handler(void);
-void BusFault_Handler(void);
-void UsageFault_Handler(void);
-void SVC_Handler(void);
-void DebugMon_Handler(void);
-void PendSV_Handler(void);
-void SysTick_Handler(void);
-void USART1_IRQHandler(void);
+/**
+  * @}
+  */
 
+/** @defgroup CRC_Exported_Constants
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @defgroup CRC_Exported_Macros
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/** @defgroup CRC_Exported_Functions
+  * @{
+  */
+
+void CRC_ResetDR(void);
+uint32_t CRC_CalcCRC(uint32_t Data);
+uint32_t CRC_CalcBlockCRC(uint32_t pBuffer[], uint32_t BufferLength);
+uint32_t CRC_GetCRC(void);
+void CRC_SetIDRegister(uint8_t IDValue);
+uint8_t CRC_GetIDRegister(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* __STM32F10x_IT_H */
+#endif /* __STM32F10x_CRC_H */
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

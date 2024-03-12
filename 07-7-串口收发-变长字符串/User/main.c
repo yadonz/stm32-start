@@ -9,17 +9,18 @@ int main(void)
 	OLED_Init();
 	Serial_UserInit();
 	
-	OLED_ShowString(2,1,"HELLO");
-	Serial_PrintString("Hello world!");
-	
 	while(1)
 	{
-		char* buff = Serial_GetString();
+		uint8_t* buff = Serial_Get8bytes();
 		if(buff != (uint8_t)0x00)	// 只有当返回值不是空指针的时候，数据才有效
-		{	
-			OLED_ShowString(1, 1, buff);
-			Serial_PrintString(buff);			
+		{			
+			for(int i = 0; i < 8; i ++)
+			{
+				OLED_ShowHexNum(1, 1 + i*2, buff[i], 2);
+				Serial_PrintChar(buff[i]);
+			}
 		}
+		for(uint32_t i = 720000; i; i --);
 	}
 }
 
