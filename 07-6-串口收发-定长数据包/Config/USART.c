@@ -6,6 +6,7 @@ void USART_UserInit(void)
 {	// GPIO 使用
 	GPIO_InitTypeDef GPIO_InitStructure;
 	USART_InitTypeDef USART_InitStructure;
+	NVIC_InitTypeDef NVIC_InitStructure;
 	
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);	// 打开 GPIOA 时钟
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);	// 打开 USART1 RCC 时钟
@@ -26,6 +27,15 @@ void USART_UserInit(void)
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_Init(USART1, &USART_InitStructure);
+	
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+	
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
+	NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+	NVIC_Init(&NVIC_InitStructure);
 	
 	USART_Cmd(USART1, ENABLE);
 }
@@ -59,8 +69,7 @@ void USART_GetString(void)
 	while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);	// 阻塞直到读数据寄存器接收到数据
 	c = (uint8_t)USART_ReceiveData(USART1);
 	i = 0;
-//	for(i = 0; (i < 32) && (c != '\0'); i ++ )	// 注意，这里的条件判断 c != '\0' 永远都不会执行，因为 PC 发送过去的字符串不是以 '\0' 结尾的（所以这段代码会等待 32 个字节全部填充完毕才会执行）
-	for(i = 0; (i < 32) && (c != '\n'); i ++) // 使用换行符作为一串字符的结尾
+	for(i = 0; (i < 32) && (c != '\0') ; i ++ )	// 注意，这里的条件判断 c != '\0' 永远都不会执行，因为 PC 发送过去的字符串不是以 '\0' 结尾的（所以这段代码会等待 32 个字节全部填充完毕才会执行）
 	{
 		Str_receive[i] = c;
 		while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);	// 阻塞直到读数据寄存器接收到数据
