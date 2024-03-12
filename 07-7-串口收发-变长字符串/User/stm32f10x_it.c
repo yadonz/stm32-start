@@ -156,70 +156,58 @@ void SysTick_Handler(void)
 /**
   * @}
   */ 
-// 判断一个字符是不是待转义的字符
-uint8_t isEscapeCharacter(char c)
-{
-	char* str = "\\@";
-	for(; str != '\0'; str ++)
-	{
-		if(*str == c)
-		{
-			return 1;
-		}
-	}
-	return 0;
-}
+
 char GetChar(void)
 {
 		while(USART_GetFlagStatus(USART1, USART_FLAG_RXNE) == RESET);	// 阻塞直到读数据寄存器接收到数据
 		return (uint8_t)USART_ReceiveData(USART1);
 }
-void USART1_IRQHandler(void)
-{/**这里设定一种具有三种状态的状态机，分别是：
-	- 待机状态：状态为 0
-	- 遇到数据包头标识字节准备接受，状态为 1
-	- 接收数据，并在指定字节位置判断包尾字符，同时获取字符串：成功状态为 2，表示字符串有效；失败状态变为 0，表示字符串无效
-	*/
-	uint8_t i;
+void USART1_IRQHandler(void){
+	// 包头字符为 '@'；包尾字符为 '!'；转义标识字符为 '\'
 	char c;
 	
-	if(USART_GetITStatus(USART1, USART_IT_RXNE) == SET)
-	{
-		if(Serial_State == Serial_State_Standby && GetChar() == '@') // 如果待机状态时收到了 @ 字符，那么准备接收字符串序列
-		{
-			Serial_State = Serial_State_Working;	// 待机状态接收到包头，那么状态更改为工作状态，读取数据包内容
-			for(i = 0; i < 100
-			; i ++)
-			{
-				c = GetChar();
-				if(c != '\\')	// 如果收到的字符不是转义字符开始标记，那么直接存入字符串缓冲区
-				{
-					Serial_Buffer[i] = c;
-				}
-				else			// 如果收到了转义字符开始标记，那么接受并判断下一个字符串是否是应该被转义的字符，如果不是，说明数据包出错，状态转为 standby 状态标记缓冲区无效
-				{
-					c = GetChar();
-					if(isEscapeCharacter(c) == 1)
-					{
-						Serial_Buffer[i] = c;
-					}
-					else
-					{
-						break;
-					}
-				}
-				
-			}
-			if(GetChar() != (char)0x00)		// 读取完数据包后，如果数据包尾不是指定标识数据
-			{
-				Serial_State = Serial_State_Standby;// 那么状态更改为待机状态，表示此时缓冲区数据无效，并退出
-			}
-			else 									// 读取完数据包后，如果数据包尾是指定标识数据
-			{
-				Serial_State = Serial_State_Finished;// 那么状态更改为完成，表示此时缓冲区数据有效（读取完缓冲区数据后记得修改状态为待机）
+	if(USART_GetITStatus(USART1, USART_IT_RXNE) == SET){
+		c = GetChar();
+		if(Serial_State == Serial_State_Standby){		// 待命状态
+			if(c == '@'){								// 待命状态接收到字符 '@' 
+				Serial_State = Serial_State_Working1;	// 转移到工作状态 1
+				i = 0;									// 待命状态转换到工作状态时，要将索引清零
 			}
 		}
-
+		else if(Serial_State == Serial_State_Working1){	// 工作状态 1
+			if(i >= 99){								// 当接收到的字符达到 99 时
+				Serial_State = Serial_State_Finished;	// 切换状态为完成（这是一个特殊情况，当输入的字符长度超过缓冲区大小时，不等待包尾字符的出现，直接截断已收到的字符，并将缓冲区内容视为有效）
+			}
+			else if(c == '!'){							// 遇到结束字符
+				Serial_State = Serial_State_Finished;	// 转换工作状态为完成
+			}
+			else if(c == '\\'){							// 遇到转义字符标记字符
+				Serial_State = Serial_State_Working2;	// 进入工作状态 2 处理转义字符
+			}
+			else if(c == '@'){							// 再次遇到 @ 字符，不合法，缓冲区数据无效
+				Serial_State = Serial_State_Standby;	// 转换状态为待命状态
+			}
+			else{										// 遇到的为其它普通的字符
+				Serial_Buffer[i] = c;					// 将普通字符加入缓冲区
+				i ++;									// 缓冲区索引加一
+			}
+		}
+		else if(Serial_State == Serial_State_Working2){	// 工作状态 2（遇到转义字符标记后）
+			if(c == '!' || c == '@' || c == '\\'){		// 如果遇到合法的被转义字符
+				Serial_Buffer[i] = c;					// 将合法的被转义字符存入缓冲区
+				i ++;									// 缓冲区索引加一
+				Serial_State = Serial_State_Working1;	// 进入工作状态 1
+			}
+			else{										// 被转义字符不合法
+				Serial_State = Serial_State_Standby;	// 进入待命状态，缓冲区数据无效
+			}
+		}
+		else if(Serial_State == Serial_State_Finished)	// 完成状态
+		{
+			Serial_Buffer[i] = '\0';					// 完成状态在字符串末尾加上字符串结束标记，此时不转移状态，这里的状态转移要等待读缓冲区函数读出数据并转移状态
+		}
+		
+		
 		USART_ClearITPendingBit(USART1, USART_IT_RXNE);
 	}
 }

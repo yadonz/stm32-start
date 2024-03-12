@@ -33,13 +33,15 @@
 // 串口状态标志位
 typedef enum{
 	Serial_State_Standby = 0,
-	Serial_State_Working = 1,
-	Serial_State_Finished = 2
+	Serial_State_Working1 = 1,
+	Serial_State_Working2 = 2,
+	Serial_State_Finished = 3
 }Serial_State_TypeDef;
 
 Serial_State_TypeDef Serial_State;	// 串口缓冲区状态标志位
 // 串口数据包接收缓冲区
-uint8_t Serial_Buffer[100];
+char Serial_Buffer[100];
+uint16_t i = 0;
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/

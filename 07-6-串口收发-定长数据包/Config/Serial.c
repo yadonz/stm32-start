@@ -57,12 +57,12 @@ void Serial_PrintString(char* str)
 	}
 }
 
-char* Serial_GetString(void)				// 返回数据包缓冲区的内容（如果数据无效那么返回空指针）
+uint8_t* Serial_Get8bytes(void)				// 返回数据包缓冲区的内容（如果数据无效那么返回空指针）
 {
 	if(Serial_State == Serial_State_Finished)
 	{
-		Serial_State = Serial_State_Standby;// 读取缓冲区数据之后，状态将会转变为待命状态，记得修改状态
+		Serial_State = Serial_State_Standby;
 		return Serial_Buffer;
 	}
-	return (char*)0x00000000;
+	return (uint8_t*)0x00000000;
 }
