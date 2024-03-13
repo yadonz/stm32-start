@@ -23,7 +23,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x_it.h"
-
+#include "OLED.h"
 /** @addtogroup STM32F10x_StdPeriph_Template
   * @{
   */
@@ -32,6 +32,8 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
+
+uint16_t Period = 0;
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -153,8 +155,105 @@ void SysTick_Handler(void)
 }*/
 
 /**
-  * @}
+  * @brief 这是编码器中断 0 号线路中断函数
   */ 
+void EXTI0_IRQHandler(void)
+{
+	if(EXTI_GetITStatus(EXTI_Line0) == SET)	// 进中断时要确认是否触发中断
+	{
+		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_1) == RESET)
+		{
+			if(Period < 1000)
+			{
+				Period += 1;
+			}
+			else
+			{
+				Period = 0;
+			}
+		}
+		EXTI_ClearITPendingBit(EXTI_Line0);	// 退出中断前要记得清除中断标志位（不然无法退出中断）
+	}
+}
+
+/**
+  * @brief 这是编码器中断 1 号线路中断函数
+  */ 
+void EXTI1_IRQHandler(void)
+{
+	if(EXTI_GetITStatus(EXTI_Line1) == SET)	// 进中断时要确认是否触发中断
+	{
+		if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_0) == RESET)
+		{
+			if(Period > 0)
+			{
+				Period -= 1;
+			}
+			else
+			{
+				Period = 1000;
+			}
+		}
+		EXTI_ClearITPendingBit(EXTI_Line1);	// 退出中断前要记得清除中断标志位（不然无法退出中断）
+	}
+}
+
+/**
+  * @brief 这是编码器中断 1 号线路中断函数
+  */ 
+void EXTI2_IRQHandler(void)
+{
+	uint16_t cnt;
+	if(EXTI_GetITStatus(EXTI_Line2) == SET)					// 进中断时要确认是否触发中断
+	{
+		for(cnt = 0xffff; cnt; cnt --);							// 软件消抖
+		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_2) == RESET) // 软件消抖
+		{
+			if(Period < 1000)
+			{
+				Period += 1;
+			}
+			else
+			{
+				Period = 0;
+			}
+		}
+		EXTI_ClearITPendingBit(EXTI_Line2);	// 退出中断前要记得清除中断标志位（不然无法退出中断）
+	}
+}
+
+/**
+  * @brief 这是编码器中断 1 号线路中断函数
+  */ 
+void EXTI4_IRQHandler(void)
+{
+	uint16_t cnt;
+	if(EXTI_GetITStatus(EXTI_Line4) == SET)					// 进中断时要确认是否触发中断
+	{
+		for(cnt = 0xffff; cnt; cnt --);							// 软件消抖
+		if(GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_4) == RESET) // 软件消抖
+		{
+			if(Period > 0)
+			{
+				Period -= 1;
+			}
+			else
+			{
+				Period = 1000;
+			}
+		}
+		EXTI_ClearITPendingBit(EXTI_Line4);	// 退出中断前要记得清除中断标志位（不然无法退出中断）
+	}
+}
 
 
+void TIM3_IRQHandler(void)
+{
+	if(TIM_GetITStatus(TIM3, TIM_IT_Update))
+	{
+		Speed = TIM_GetCounter(TIM2);
+		TIM_SetCounter(TIM2, 0);
+		TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+	}
+}
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
