@@ -5,7 +5,7 @@ void Timer_Init(void)
 	// 打开 TIM2 的时钟
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
 	
-	// TIM2 时基单元的时钟源配置为外部时钟
+	// TIM2 时基单元的时钟源配置为内部时钟
 	TIM_InternalClockConfig(TIM2);
 	
 	// 配置 TIM2 的时基时钟，以及重装载计数器的值
