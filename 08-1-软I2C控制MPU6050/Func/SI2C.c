@@ -3,8 +3,8 @@
 // 软件 I2C 的端口 PB12=SDA PB13=SCL
 #define SI2C_PORT 		GPIOB					
 #define SI2C_RCC  		RCC_APB2Periph_GPIOB
-#define SI2C_SCL_PIN	GPIO_Pin_13
-#define SI2C_SDA_PIN	GPIO_Pin_12
+#define SI2C_SCL_PIN	GPIO_Pin_10
+#define SI2C_SDA_PIN	GPIO_Pin_11
 
 
 void SI2C_Init(void)

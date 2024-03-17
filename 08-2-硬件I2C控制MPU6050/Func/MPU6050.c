@@ -7,19 +7,36 @@
 #define I2C_GPIO_SDA_PIN	GPIO_Pin_11
 
 
+void WaitEvent(uint32_t Event)
+{
+	uint16_t TimeOut = 5000;
+	while (I2C_CheckEvent(I2C2, Event) != SUCCESS)
+	{
+		TimeOut --;
+		if (TimeOut == 0)
+		{
+			break;	// 实际项目中这里应该是错处理函数
+		}
+	}
+}
+
 void MPU6050_WriteReg(uint8_t RegAddr, uint8_t data)
 {
 	I2C_GenerateSTART(I2C2, ENABLE);											// STM32 I2C 默认位从机模式，发送一个起始标志则进入主机模式
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT) != SUCCESS);		// 阻塞，直至进入主机模式
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT) != SUCCESS);		// 阻塞，直至进入主机模式
+	WaitEvent(I2C_EVENT_MASTER_MODE_SELECT);
 	
 	I2C_Send7bitAddress(I2C2, MPU6050_ADDR, I2C_Direction_Transmitter);			// 发送从机地址（发送模式）
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) != SUCCESS);// 阻塞，直至转变为发送模式
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) != SUCCESS);// 阻塞，直至转变为发送模式
+	WaitEvent(I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED);
 	
 	I2C_SendData(I2C2, RegAddr);												// 发送寄存器地址
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTING) != SUCCESS);	// 阻塞，直至移位寄存器空，数据寄存器非空
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTING) != SUCCESS);	// 阻塞，直至移位寄存器空，数据寄存器非空
+	WaitEvent(I2C_EVENT_MASTER_BYTE_TRANSMITTING);
 	
 	I2C_SendData(I2C2, data);													// 发送数据
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED) != SUCCESS);	// 请求设置停止位
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED) != SUCCESS);	// 请求设置停止位
+	WaitEvent(I2C_EVENT_MASTER_BYTE_TRANSMITTED);
 	
 	I2C_GenerateSTOP(I2C2, ENABLE);												// 产生停止位
 }
@@ -27,24 +44,32 @@ void MPU6050_WriteReg(uint8_t RegAddr, uint8_t data)
 uint8_t MPU6050_ReadReg(uint8_t RegAddr)
 {
 	I2C_GenerateSTART(I2C2, ENABLE);											// STM32 I2C 默认位从机模式，发送一个起始标志则进入主机模式
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT) != SUCCESS);		// 阻塞，直至进入主机模式
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT) != SUCCESS);		// 阻塞，直至进入主机模式
+	WaitEvent(I2C_EVENT_MASTER_MODE_SELECT);
 	
 	I2C_Send7bitAddress(I2C2, MPU6050_ADDR, I2C_Direction_Transmitter);			// 发送从机地址（发送模式）
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) != SUCCESS);// 阻塞，直至转变为发送模式
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) != SUCCESS);// 阻塞，直至转变为发送模式
+	WaitEvent(I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED);
 	
 	I2C_SendData(I2C2, RegAddr);												// 发送寄存器地址
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED) != SUCCESS);	// 阻塞，直至移位寄存器空，数据寄存器非空（transmitting 和 transmitted 都可以，建议 transmitted）
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_TRANSMITTED) != SUCCESS);	// 阻塞，直至移位寄存器空，数据寄存器非空（transmitting 和 transmitted 都可以，建议 transmitted）
+	WaitEvent(I2C_EVENT_MASTER_BYTE_TRANSMITTED);
 	
 	I2C_GenerateSTART(I2C2, ENABLE);
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT) != SUCCESS);		// 阻塞，直至进入主机模式
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_MODE_SELECT) != SUCCESS);		// 阻塞，直至进入主机模式
+	WaitEvent(I2C_EVENT_MASTER_MODE_SELECT);
 	
 	I2C_Send7bitAddress(I2C2, MPU6050_ADDR, I2C_Direction_Receiver);			// 发送从机地址（接收模式）
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED) != SUCCESS);// 阻塞，直至转变为接收模式
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED) != SUCCESS);// 阻塞，直至转变为接收模式
+	WaitEvent(I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED);
+	
+	
 	// 这里的操作必须要在最后一个字节发送之前执行（硬件会自动在最后一个字节发送之前缓存该操作，并在最后一个字节发送完成之后执行）
 	I2C_AcknowledgeConfig(I2C2, DISABLE);										// 在最后一个字节发送之前，Ack 应答位关闭，并产生停止位
 	I2C_GenerateSTOP(I2C2, ENABLE);												// 产生停止位
 	
-	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_RECEIVED) != SUCCESS);		// 阻塞，直至数据寄存器非空
+//	while (I2C_CheckEvent(I2C2, I2C_EVENT_MASTER_BYTE_RECEIVED) != SUCCESS);		// 阻塞，直至数据寄存器非空
+	WaitEvent(I2C_EVENT_MASTER_BYTE_RECEIVED);
 	uint8_t data = I2C_ReceiveData(I2C2);										// 接收数据
 	
 	// 读取完最后一个字节之后，将 Ack 置为 1（注意默认开启应答）

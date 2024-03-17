@@ -24,5 +24,6 @@ int main(void)
 		OLED_ShowSignedNum(2, 9, MPU6050_DataStructure.gx, 5);
 		OLED_ShowSignedNum(3, 9, MPU6050_DataStructure.gy, 5);
 		OLED_ShowSignedNum(4, 9, MPU6050_DataStructure.gz, 5);
+		Delay_ms(100);
 	}
 }
